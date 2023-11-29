@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Operations</title>
+</head>
+<body>
+    <h1>MongoDB Operations</h1>
+
+    <h2>Insert Data</h2>
+    <form id="insertForm">
+        <label for="carNumber">Car Number:</label>
+        <input type="text" id="carNumber" required>
+        <label for="parkingSlot">Parking Slot:</label>
+        <select id="parkingSlotDropdown" required>
+            <!-- Available slots will be dynamically added here -->
+        </select>
+        <button type="button" onclick="insertData()">Insert Data</button>
+    </form>
+
+    <h2>Retrieve Data</h2>
+    <button type="button" onclick="retrieveData()">Retrieve Data</button>
+    <ul id="dataList"></ul>
+
+    <h2>Delete Data</h2>
+    <label for="deleteId">Delete Data by ID:</label>
+    <input type="text" id="deleteId" required>
+    <button type="button" onclick="deleteData()">Delete Data</button>
+
+    <script>
+        // Function to populate the available slots dropdown
+        function populateSlotsDropdown() {
+            const dropdown = document.getElementById("parkingSlotDropdown");
+            dropdown.innerHTML = "";
+
+            for (let i = 1; i <= 20; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.textContent = `Slot ${i}`;
+                dropdown.appendChild(option);
+            }
+        }
+
+        // Call the function to populate the dropdown on page load
+        populateSlotsDropdown();
+
+        async function insertData() {
+            const carNumber = document.getElementById("carNumber").value;
+            const parkingSlot = document.getElementById("parkingSlotDropdown").value;
+
+            try {
+                const response = await fetch('http://localhost:3000/insert', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ carNumber, parkingSlot }),
+                });
+
+                const data = await response.json();
+                alert(data.message);
+
+                // Remove the associated slot from the dropdown
+                document.getElementById("parkingSlotDropdown").removeChild(document.querySelector(`option[value='${parkingSlot}']`));
+            } catch (error) {
+                console.error('Error inserting data:', error);
+                alert('Error inserting data. Please check the console for details.');
+            }
+        }
+
+        async function retrieveData() {
+            try {
+                const response = await fetch('http://localhost:3000/retrieve');
+                const { data } = await response.json();
+
+                const dataList = document.getElementById("dataList");
+                dataList.innerHTML = "";
+
+                data.forEach(item => {
+                    const listItem = document.createElement("li");
+                    listItem.textContent = `ID: ${item._id}, Car Number: ${item.carNumber}, Parking Slot: ${item.parkingSlot}`;
+                    dataList.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error('Error retrieving data:', error);
+                alert('Error retrieving data. Please check the console for details.');
+            }
+        }
+
+        async function deleteData() {
+            const deleteId = document.getElementById("deleteId").value;
+
+            try {
+                const response = await fetch(`http://localhost:3000/delete/${deleteId}`, {
+                    method: 'DELETE',
+                });
+
+                const data = await response.json();
+                alert(data.message);
+                
+                // Re-populate the available slots dropdown after deleting data
+                populateSlotsDropdown();
+            } catch (error) {
+                console.error('Error deleting data:', error);
+                alert('Error deleting data. Please check the console for details.');
+            }
+        }
+    </script>
+</body>
+</html>
