@@ -1,25 +1,19 @@
 const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
 const bodyParser = require('body-parser');
-//const cors = require('cors'); // Import the cors middleware
-
 
 const app = express();
 const PORT = 3000;
 const uri = 'mongodb://localhost:27017/parkingdb';
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*'); // Change * to your front-end server URL in production
+    res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     next();
 });
 
-//app.use(cors()); // Enable CORS
-
-
 app.use(bodyParser.json());
 
-// Connect to MongoDB
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
     if (err) {
@@ -29,7 +23,6 @@ client.connect(err => {
     console.log('Connected to MongoDB');
 });
 
-// Insert data
 app.post('/insert', async (req, res) => {
     const { carNumber, parkingSlot } = req.body;
     const parkingCollection = client.db('parkingdb').collection('parking');
@@ -43,7 +36,6 @@ app.post('/insert', async (req, res) => {
     }
 });
 
-// Retrieve data
 app.get('/retrieve', async (req, res) => {
     const parkingCollection = client.db('parkingdb').collection('parking');
 
@@ -56,7 +48,6 @@ app.get('/retrieve', async (req, res) => {
     }
 });
 
-// Delete data
 app.delete('/delete/:id', async (req, res) => {
     const parkingCollection = client.db('parkingdb').collection('parking');
     const id = req.params.id;
@@ -70,6 +61,24 @@ app.delete('/delete/:id', async (req, res) => {
         }
     } catch (error) {
         console.error('Error deleting data:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// New endpoint for unparking
+app.put('/unpark/:carNumber', async (req, res) => {
+    const { carNumber } = req.params;
+    const parkingCollection = client.db('parkingdb').collection('parking');
+
+    try {
+        const result = await parkingCollection.updateOne({ carNumber }, { $set: { parkingSlot: null } });
+        if (result.modifiedCount === 1) {
+            res.json({ message: 'Car unparked successfully' });
+        } else {
+            res.status(404).json({ error: 'Car not found or already unparked' });
+        }
+    } catch (error) {
+        console.error('Error unparking car:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
