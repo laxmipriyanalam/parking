@@ -28,6 +28,12 @@
     <input type="text" id="deleteId" required>
     <button type="button" onclick="deleteData()">Delete Data</button>
 
+    <!-- New Unparking Section -->
+    <h2>Unparking</h2>
+    <label for="unparkCarNumber">Car Number to Unpark:</label>
+    <input type="text" id="unparkCarNumber" required>
+    <button type="button" onclick="unparkCar()">Unpark Car</button>
+
     <script>
         // Function to populate the available slots dropdown
         function populateSlotsDropdown() {
@@ -98,12 +104,31 @@
 
                 const data = await response.json();
                 alert(data.message);
-                
+
                 // Re-populate the available slots dropdown after deleting data
                 populateSlotsDropdown();
             } catch (error) {
                 console.error('Error deleting data:', error);
                 alert('Error deleting data. Please check the console for details.');
+            }
+        }
+
+        async function unparkCar() {
+            const unparkCarNumber = document.getElementById("unparkCarNumber").value;
+
+            try {
+                const response = await fetch(`http://localhost:3000/unpark/${unparkCarNumber}`, {
+                    method: 'PUT',
+                });
+
+                const data = await response.json();
+                alert(data.message);
+
+                // Re-populate the available slots dropdown after unparking
+                populateSlotsDropdown();
+            } catch (error) {
+                console.error('Error unparking car:', error);
+                alert('Error unparking car. Please check the console for details.');
             }
         }
     </script>
